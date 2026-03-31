@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SQL Search PRO</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="top-bar">
+  <button id="toggleSidebar" class="menu-btn">
+     <span></span>
+  <span></span>
+  <span></span>
+  </button>
+  <button id="selectFolder">📂 Pasta</button>
+  <input id="search" placeholder="Buscar SQL..." />
+  <div class="top-actions">
+    <button id="prev">⬆</button>
+    <button id="next">⬇</button>
+    <button id="newFile">🆕 Novo</button>
+    <button id="saveFile">💾 Salvar</button>
+    <button id="saveAs">💾 Salvar Como</button>
+    <button id="toggleWatch">⏸️ Pausar</button>
+  </div>
+</div>
+ <div class="folder-info" id="folderInfo">
+  Nenhuma pasta selecionada
+</div>
+<div id="overlay"></div>
+
+<div class="container">
+  <div class="file-list" id="fileList"></div>
+  <div id="tabs"></div>
+  <div id="editor"></div>
+</div>
+
+<script src="../node_modules/monaco-editor/min/vs/loader.js"></script>
+<script src="editor.js"></script>
+<script src="renderer.js"></script>
+
+</body>
+</html>

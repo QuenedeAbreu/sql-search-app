@@ -1,0 +1,14 @@
+// ignorar arquivos
+dist/
+node_modules/
+*.log
+*.db
+*.sqlite
+# Configurações do editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
