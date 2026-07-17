@@ -80,6 +80,36 @@ margin-top: calc(var(--topbar-height) + 30px);
   background: #3e3e42;
 }
 
+.folder-header {
+  padding: 8px;
+  background: #252526;
+  color: #ccc;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #333;
+  user-select: none;
+}
+.folder-header:hover {
+  background: #3e3e42;
+}
+.folder-header.open .arrow {
+  transform: rotate(90deg);
+}
+.arrow {
+  transition: transform 0.2s;
+  font-size: 10px;
+}
+.folder-container {
+  display: none;
+}
+.accordion-item {
+  padding-left: 24px;
+}
+
+
 @media (max-width: 800px) {
   .file-list {
     position: fixed;
@@ -102,6 +132,9 @@ button {
   border: none;
   color: white;
   padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.2s;
 }
 
 button:hover {
@@ -167,4 +200,46 @@ button:hover {
 .menu-btn.active span:nth-child(3) {
   transform: rotate(-45deg);
   top: 10px;
+}
+
+/* 🌞 LIGHT THEME */
+body.light {
+  background: #ffffff;
+  color: #000;
+}
+
+body.light .top-bar {
+  background: #f3f3f3;
+}
+
+body.light .folder-info {
+  background: #e5e5e5;
+  color: #000;
+}
+
+body.light .file-list {
+  background: #fafafa;
+  color: #000;
+}
+
+body.light .file-item:hover {
+  background: #ddd;
+}
+
+body.light .folder-header {
+  background: #fafafa;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+}
+body.light .folder-header:hover {
+  background: #eee;
+}
+
+body.light button {
+  background: #ddd;
+  color: #000;
+}
+
+body.light #editor {
+  background: #ffffff;
 }

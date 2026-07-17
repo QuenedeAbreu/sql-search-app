@@ -70,7 +70,7 @@ ipcMain.handle('read-files', (event, dir) => {
       const stat = fs.statSync(fullPath);
       if (stat.isDirectory()) {
         results = results.concat(getAllSQLFiles(fullPath, baseDir));
-      } else if (item.endsWith('.sql')) {
+      } else if (/\.(sql|html|htm|js|ts|css|json|xml|md|txt)$/i.test(item)) {
         results.push({
           name: item,
           path: fullPath,

@@ -12,7 +12,9 @@ let fileContentCache = {};
 let isNewFile = false;
 let sortDesc = true;
 let watching = true;
+let isDark = true;
 
+const themeBtn = document.getElementById('toggleTheme');
 const watchBtn = document.getElementById('toggleWatch');
 
 if (watchBtn) {
@@ -20,6 +22,43 @@ if (watchBtn) {
     watching = await window.api.toggleWatch();
     watchBtn.innerText = watching ? '⏸️ Pausar' : '▶️ Retomar';
   };
+}
+
+function applyTheme() {
+  if (isDark) {
+    document.body.classList.remove('light');
+    monaco.editor.setTheme('vs-dark');
+    themeBtn.innerText = '🌙';
+  } else {
+    document.body.classList.add('light');
+    monaco.editor.setTheme('vs');
+    themeBtn.innerText = '☀️';
+  }
+
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+themeBtn.onclick = () => {
+  isDark = !isDark;
+  applyTheme();
+};
+
+function getLanguage(fileName) {
+  const ext = fileName.split('.').pop().toLowerCase();
+
+  const map = {
+    sql: 'sql',
+    html: 'html',
+    htm: 'html',
+    js: 'javascript',
+    ts: 'typescript',
+    css: 'css',
+    json: 'json',
+    xml: 'xml',
+    md: 'markdown',
+    txt: 'plaintext'
+  };
+
+  return map[ext] || 'plaintext';
 }
 
 function formatDate(date) {
@@ -193,26 +232,76 @@ async function renderList() {
       ? new Date(b.createdAt) - new Date(a.createdAt)
       : new Date(a.createdAt) - new Date(b.createdAt);
   });
+  const grouped = {};
   filtered.forEach(file => {
-    const div = document.createElement('div');
-    div.className = 'file-item';
-    div.innerHTML = `
-    <div>${file.name}</div>
-    <small style="color: #888">
-    Criado: ${formatDate(file.createdAt)} </br>
-    Modificado: ${formatDate(file.modifiedAt)}
-  </small>
-`;
-    div.onclick = () => {
-      openFile(file);
-      // fecha menu no mobile
-      if (window.innerWidth <= 800) {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('show');
-        menuBtn.classList.remove('active');
+    const relPath = (file.relativePath || '').replace(/\\/g, '/');
+    const folderPath = relPath.includes('/') ? relPath.substring(0, relPath.lastIndexOf('/')) : '/';
+    if (!grouped[folderPath]) grouped[folderPath] = [];
+    grouped[folderPath].push(file);
+  });
+
+  Object.keys(grouped).sort().forEach(folderPath => {
+    const folderFiles = grouped[folderPath];
+    const isRoot = folderPath === '/';
+
+    const folderHeader = document.createElement('div');
+    folderHeader.className = 'folder-header';
+    folderHeader.innerHTML = `<span>📁 ${isRoot ? 'Raiz' : folderPath}</span> <span class="arrow">▶</span>`;
+
+    const folderContainer = document.createElement('div');
+    folderContainer.className = 'folder-container';
+    
+    if (term || isRoot) {
+       folderContainer.style.display = 'block';
+       folderHeader.classList.add('open');
+       const arrow = folderHeader.querySelector('.arrow');
+       if (arrow) arrow.textContent = '▼';
+    }
+
+    folderHeader.onclick = () => {
+      folderHeader.classList.toggle('open');
+      const arrow = folderHeader.querySelector('.arrow');
+      if (folderHeader.classList.contains('open')) {
+         folderContainer.style.display = 'block';
+         arrow.textContent = '▼';
+      } else {
+         folderContainer.style.display = 'none';
+         arrow.textContent = '▶';
       }
     };
-    fileListEl.appendChild(div);
+
+    fileListEl.appendChild(folderHeader);
+
+    folderFiles.forEach(file => {
+      const div = document.createElement('div');
+      div.className = 'file-item accordion-item';
+      
+      let displayName = file.name;
+      if (term) {
+        const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedTerm})`, 'gi');
+        displayName = displayName.replace(regex, '<mark style="background-color: #ffeb3b; color: black; border-radius: 2px; padding: 0 2px;">$1</mark>');
+      }
+
+      div.innerHTML = `
+      <div style="margin-bottom: 4px; font-weight: bold;">${displayName}</div>
+      <small style="color: #888">
+      Criado: ${formatDate(file.createdAt)} </br>
+      Modificado: ${formatDate(file.modifiedAt)}
+      </small>
+      `;
+      div.onclick = () => {
+        openFile(file);
+        if (window.innerWidth <= 800) {
+          sidebar.classList.remove('open');
+          overlay.classList.remove('show');
+          menuBtn.classList.remove('active');
+        }
+      };
+      folderContainer.appendChild(div);
+    });
+
+    fileListEl.appendChild(folderContainer);
   });
 }
 
@@ -220,6 +309,12 @@ async function openFile(file) {
   currentFile = file;
 
   const content = await window.api.readFileContent(file.path);
+
+  const language = getLanguage(file.name);
+
+  const model = window.editorInstance.getModel();
+
+  monaco.editor.setModelLanguage(model, language);
 
   window.editorInstance.setValue(content);
 
@@ -292,13 +387,12 @@ prevBtn.onclick = () => {
 };
 
 window.addEventListener('load', async () => {
+  const savedTheme = localStorage.getItem('theme');
   let dir = await window.api.getLastFolder();
-
   // fallback para pasta padrão
   if (!dir) {
     dir = await window.api.getDefaultFolder();
   }
-
   if (!dir) return;
 
   currentDir = dir;
@@ -312,7 +406,10 @@ window.addEventListener('load', async () => {
   `;
 
   fileContentCache = {};
-
+  if (savedTheme === 'light') {
+    isDark = false;
+  }
+  applyTheme();
   await loadFiles();
   window.api.watchFolder(currentDir);
 });
