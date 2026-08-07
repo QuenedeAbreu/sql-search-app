@@ -275,6 +275,9 @@ async function renderList() {
     folderFiles.forEach(file => {
       const div = document.createElement('div');
       div.className = 'file-item accordion-item';
+      if (currentFile && currentFile.path === file.path) {
+        div.classList.add('active');
+      }
       
       let displayName = file.name;
       if (term) {
@@ -291,6 +294,8 @@ async function renderList() {
       </small>
       `;
       div.onclick = () => {
+        document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
+        div.classList.add('active');
         openFile(file);
         if (window.innerWidth <= 800) {
           sidebar.classList.remove('open');
@@ -306,19 +311,26 @@ async function renderList() {
 }
 
 async function openFile(file) {
-  currentFile = file;
+  const loading = document.getElementById('loadingOverlay');
+  if (loading) loading.style.display = 'flex';
 
-  const content = await window.api.readFileContent(file.path);
+  try {
+    currentFile = file;
 
-  const language = getLanguage(file.name);
+    const content = await window.api.readFileContent(file.path);
 
-  const model = window.editorInstance.getModel();
+    const language = getLanguage(file.name);
 
-  monaco.editor.setModelLanguage(model, language);
+    const model = window.editorInstance.getModel();
 
-  window.editorInstance.setValue(content);
+    monaco.editor.setModelLanguage(model, language);
 
-  applySearch();
+    window.editorInstance.setValue(content);
+
+    applySearch();
+  } finally {
+    if (loading) loading.style.display = 'none';
+  }
 }
 
 searchInput.oninput = async () => {
